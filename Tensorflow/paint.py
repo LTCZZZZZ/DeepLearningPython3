@@ -52,7 +52,7 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
         legend = []
 
     set_figsize(figsize)
-    axes = axes if axes else d2l.plt.gca()
+    axes = axes if axes else d2l.plt.gca()  # gca就是get current axes的意思
 
     # 如果 `X` 有一个轴，输出True
     def has_one_axis(X):
