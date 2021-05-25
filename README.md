@@ -1,4 +1,6 @@
-## Overview
+## This is a Learning code and record git repository  
+
+### Below is previous repository ReadMe 
 
 ### neuralnetworksanddeeplearning.com integrated scripts for Python 3.5.2 and Theano with CUDA support
 
