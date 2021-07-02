@@ -67,3 +67,19 @@ with tf.GradientTape() as t:
     d = f(a)
 d_grad = t.gradient(d, a)
 print(d_grad, d_grad == d / a)
+
+
+# 看看y=Ax的导数是分子布局还是分母布局
+x = tf.Variable([[1], [2]], dtype=float)
+A = tf.constant(range(6, 10), dtype=float, shape=(2, 2))
+with tf.GradientTape(persistent=True) as t:
+    # y = tf.linalg.matvec(A, x)
+    y = A @ x
+    print(y)
+    y_sum = tf.reduce_sum(y)
+print(t.gradient(y, x))  # 可以看出此结果的shape始终与x相同，并非一般意义上的梯度，至于具体是怎么算的，以及有什么用，后续待察
+print(t.batch_jacobian(y, x))
+print(t.jacobian(y, x))  # 详见文档
+# 后面发现，至少对一维的y来说，gradient(y, x)和gradient(y_sum, x)相等
+print(t.gradient(y_sum, x))
+
