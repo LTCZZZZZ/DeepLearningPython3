@@ -48,7 +48,7 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
          ylim=None, xscale='linear', yscale='linear',
          fmts=('-', 'm--', 'g-.', 'r:'), figsize=(3.5, 2.5), axes=None):
     """绘制数据点。"""
-    if legend is None:
+    if legend is None:  # 图例
         legend = []
 
     set_figsize(figsize)
