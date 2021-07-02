@@ -73,7 +73,7 @@ def linreg(X, w, b):  # @save
 # 定义损失函数
 def squared_loss(y_hat, y):  #@save
     """均方损失。"""
-    return (y_hat - tf.reshape(y, y_hat.shape))**2 / 2
+    return (y_hat - tf.reshape(y, y_hat.shape))**2 / 2 # 除以2后一般的偏导数就没有常数项2了，但其实可以不用除
 
 
 # 定义优化算法
@@ -120,6 +120,7 @@ print(w, '\n', b)
 # 学习率
 w = tf.Variable(tf.random.normal(shape=(2, 1), mean=0, stddev=0.01),
                 trainable=True)
+# w = tf.Variable(tf.zeros((2, 1)), trainable=True) # 经测试即使从0初始化，结果没有显著变化
 b = tf.Variable(tf.zeros(1), trainable=True)
 eta = 0.5
 epoch = 1000
@@ -140,6 +141,7 @@ print(w, '\n', b)
 # 分批训练
 w = tf.Variable(tf.random.normal(shape=(2, 1), mean=0, stddev=0.01),
                 trainable=True)
+# w = tf.Variable(tf.zeros((2, 1)), trainable=True) # 经测试即使从0初始化，结果没有显著变化
 b = tf.Variable(tf.zeros(1), trainable=True)
 eta = 0.15
 epoch = 100
