@@ -2,6 +2,7 @@
 # TF会隐式地在它的单独维度方向填满(tile)，以确保和另一个操作数的形状相匹配。
 # 所以，对一个[3,2]的张量和一个[3,1]的张量相加在TF中是合法的。
 # （译者：这个机制继承自numpy的广播功能。其中所谓的单独维度就是一个维度为1，或者那个维度缺失）
+import numpy as np
 import tensorflow as tf
 
 # 总结：机制是，维数首先会从较低阶数张量开始扩展，并且这种扩展(应该)只会加在前面(重要important)，
@@ -28,5 +29,13 @@ print(c)
 
 a = tf.reshape(tf.range(24), shape=(4, 2, 3))
 b = tf.constant([1, 2, 3, 4])
-# b = tf.reshape(b, (4, 1, 1))  # 如果是(4,1)就不行
+b = tf.reshape(b, (4, 1, 1))  # 如果是(4,1)就不行
+b = tf.tile(b, [1, 2, 3])  # 按维度扩充
+print(b)
 print(a + b)
+
+b = np.arange(4)
+# np的tile功能比tf更强大，可以在b的dim小于给定shape的dim时使用
+# 比如此例会自动将b的shape先扩展为(1,1,4)
+b = np.tile(b, (4, 2, 1))
+print(b)
