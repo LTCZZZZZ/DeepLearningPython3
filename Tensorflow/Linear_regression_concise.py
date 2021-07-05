@@ -46,6 +46,7 @@ net.add(tf.keras.layers.Dense(1, kernel_initializer=initializer))  # 再添加�
 # 只有在我们第一次尝试通过网络传递数据时才会进行真正的初始化。只是要记住，因为参数还没有初始化，所以我们不能访问或操作它们。
 
 # 定义损失函数
+# loss = tf.keras.losses.Huber() # 不知为何在2层时此函数表现较好，1层时MeanSquaredError更好
 loss = tf.keras.losses.MeanSquaredError()  # 这个loss函数是mean(对样本n取平均值)的
 # 经过下面与Linear_regression_scratch.py中squared_loss的比较，此loss函数是没有除以2的
 
