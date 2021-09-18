@@ -10,11 +10,12 @@ def comp_conv2d(conv2d, X):
     print(type(X.shape))
     print((X + 1).shape)
     print(X.shape + 10)
-    print((1, ) + X.shape + (1, ))
-    X = tf.reshape(X, (1, ) + X.shape + (1, ))
+    print((1,) + X.shape + (1,))
+    X = tf.reshape(X, (1,) + X.shape + (1,))
     Y = conv2d(X)
     # 省略前两个维度：批量大小和通道
     return tf.reshape(Y, Y.shape[1:3])
+
 
 # 请注意，这里每边都填充了1行或1列，因此总共添加了2行或2列
 conv2d = tf.keras.layers.Conv2D(1, kernel_size=3, padding='same')
