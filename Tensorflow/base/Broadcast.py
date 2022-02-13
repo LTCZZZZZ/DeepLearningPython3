@@ -11,8 +11,10 @@ import tensorflow as tf
 
 a = tf.constant([[1.], [2.]])
 b = tf.constant([1., 2.])
-c = tf.reduce_sum(a + b)
-print(a + b)
+s = a + b
+assert s.shape == (2, 2)  # 在代码中增加向量shape的断言，不易出错且能同时充当代码的文档
+c = tf.reduce_sum(s)
+print(s)
 print(c)
 # 第一个张量的shape为[2, 1]，第二个张量的shape为[2,]。因为从较低阶数张量的第一个维度开始扩展，
 # 所以应该将第二个张量扩展为shape=[2,2]，也就是值为[[1,2], [1,2]]。
@@ -20,8 +22,9 @@ print(c)
 
 a = tf.constant([[1.], [2.]])
 b = tf.constant([1., 2., 3.])
-c = tf.reduce_sum(a + b)
-print(a + b)
+s = a + b
+c = tf.reduce_sum(s)
+print(s)
 print(c)
 # 第一个张量的shape为[2, 1]，第二个张量的shape为[3,]。因为从较低阶数张量的第一个维度开始扩展，
 # 所以应该将第二个张量扩展为shape=[2,3]，也就是值为[[1,2,3], [1,2,3]]。
