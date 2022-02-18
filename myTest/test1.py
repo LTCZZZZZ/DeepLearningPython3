@@ -6,7 +6,7 @@ import cv2
 import imutils
 import numpy as np
 
-f = gzip.open('mnist.pkl.gz', 'rb')
+f = gzip.open('../mnist.pkl.gz', 'rb')
 training_data, validation_data, test_data = pickle.load(f, encoding="latin1")
 f.close()
 

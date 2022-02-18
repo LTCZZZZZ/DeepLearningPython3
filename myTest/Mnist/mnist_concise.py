@@ -1,3 +1,4 @@
+# Mnist数据集的简洁实现，自动求导、计算图 版本
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -19,11 +20,14 @@ f.close()
 # 第一个隐藏层的所以输出看起来都是相同的，从这方面去想
 # initializer = tf.initializers.Zeros
 
+# 参数初始化对前几百个epoch的训练效果影响较大，比如方差为0.1，0.3，0.5
 initializer = tf.initializers.RandomNormal(stddev=0.3)
 net = tf.keras.Sequential()
 # tf.identity，tf.nn.relu，tf.nn.sigmoid，tf.nn.softmax
-net.add(tf.keras.layers.Dense(30, kernel_initializer=initializer, activation=tf.nn.sigmoid))
-net.add(tf.keras.layers.Dense(10, kernel_initializer=initializer, activation=tf.nn.sigmoid))
+# 可以发现，在迭代次数epochs不变的情况下，增加一个隐层，准确率提升了10%左右，很显著
+net.add(tf.keras.layers.Dense(50, kernel_initializer=initializer, activation=tf.nn.relu))
+net.add(tf.keras.layers.Dense(30, kernel_initializer=initializer, activation=tf.nn.relu))
+net.add(tf.keras.layers.Dense(10, kernel_initializer=initializer, activation=tf.nn.softmax))
 
 # 看看初始化后未训练之前net的准确率
 print((tf.argmax(net(training_data[0]), axis=1).numpy() == training_data[1]).sum())
@@ -67,7 +71,6 @@ def train_model():
             l = loss(y_hat, y)
             grads = tape.gradient(l, net.trainable_variables)
             trainer.apply_gradients(zip(grads, net.trainable_variables))  # 注意这里的zip不能掉
-        tf.print('before epoch', i + 1, 'loss:', l)
 
         # 看测试集的数据准确率
         train_correct = tf.reduce_sum(tf.cast(tf.argmax(net(training_data[0]), axis=1) == training_data[1], tf.int32))
@@ -77,8 +80,10 @@ def train_model():
         # test_acc = tf.concat([test_acc, train_correct / 50000], 0)
         train_acc.assign(tf.tensor_scatter_nd_update(train_acc, [[i]], [train_correct / 50000]))
         test_acc.assign(tf.tensor_scatter_nd_update(test_acc, [[i]], [test_correct / 10000]))
-        tf.print(train_correct)
-        tf.print(test_correct)
+        if i % 10 == 0:
+            tf.print('before epoch', i + 1, 'loss:', l)
+            tf.print(train_correct)
+            tf.print(test_correct)
 
     # return train_acc
 
