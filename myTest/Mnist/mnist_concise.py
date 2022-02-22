@@ -41,7 +41,7 @@ trainer = tf.keras.optimizers.SGD(learning_rate=1)
 
 # 即使是单层网络，前50个epoch看不出来什么，300个epoch就很明显了
 # 此外，使用 tf.function 计算图，可大幅提升训练速度
-epochs = 1000
+epochs = 10000
 
 # 每个epoch中有如下几步：
 # 1. 正向传播一遍
@@ -57,6 +57,8 @@ y = np.eye(10)[training_data[1]]  # 根据标签快速生成one-hot编码
 train_acc = tf.Variable([0] * epochs, dtype=tf.float64)
 test_acc = tf.Variable([0] * epochs, dtype=tf.float64)
 
+# 计算图官方指南，参见 https://tensorflow.google.cn/guide/function#autograph_transformations
+# 计算图的比较详细的解释，参见 https://blog.csdn.net/zkbaba/article/details/103915132/
 # 计算图中print和tf.print的区别：print是在编译过程中执行的，所以无意义，想观察执行过程中变量的变化，使用tf.print
 # 另可参见 https://stackoverflow.com/questions/57469673/tf-print-vs-python-print-vs-tensor-eval
 # @tf.function(jit_compile=True)  # 显式地启用 TensorFlow 中的 XLA（线性代数加速）功能
