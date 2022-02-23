@@ -1,0 +1,9 @@
+# 来源于 https://gitee.com/Carl-Xie/AutodiffEngine/tree/master
+# 自动微分引擎，来源于华盛顿大学陈天奇的课程项目
+
+*.pyc
+*.dat
+*.npy
+.DS_Store
+.idea
+__pycache__
