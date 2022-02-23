@@ -1,6 +1,8 @@
 ## This is a Learning code and record git repository
 
 ### 1. TensorFlow文件夹是李沐的 [动手学深度学习](https://zh-v2.d2l.ai) 的学习记录
+#### 1.1. base文件夹是基础相关，包括矩阵乘法、广播、axis、交叉熵、shuffle、设备列表等
+#### 1.2 advanced文件夹是进阶相关，包括tf.function计算图等
 
 ### 2. NN&DL文件夹是吴恩达的 [Neural Networks and Deep Learning](https://www.deeplearningai.net/classroom/Neural_Networks_and_DeepLearning) 的学习记录
 

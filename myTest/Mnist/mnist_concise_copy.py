@@ -1,3 +1,4 @@
+# 副本，其中带有某些很"蠢"的自己实现的方法
 # Mnist数据集的简洁实现，自动求导、计算图 版本
 import numpy as np
 import tensorflow as tf
@@ -56,8 +57,8 @@ y = np.eye(10)[training_data[1]]  # 根据标签快速生成one-hot编码
 # print(y[:10])
 # print(y.shape)  # (50000, 10)
 
-# train_acc = tf.Variable([0] * epochs, dtype=tf.float64)
-# test_acc = tf.Variable([0] * epochs, dtype=tf.float64)
+train_acc = tf.Variable([0] * epochs, dtype=tf.float64)
+test_acc = tf.Variable([0] * epochs, dtype=tf.float64)
 
 # 计算图官方指南，参见 https://tensorflow.google.cn/guide/function#autograph_transformations
 # 计算图的比较详细的解释，参见 https://blog.csdn.net/zkbaba/article/details/103915132/
@@ -67,8 +68,6 @@ y = np.eye(10)[training_data[1]]  # 根据标签快速生成one-hot编码
 @tf.function()
 def train_model():
     # global train_acc, test_acc
-    train_acc = tf.TensorArray(tf.float64, size=epochs)
-    test_acc = tf.TensorArray(tf.float64, size=epochs)
     # Because A Python loop executes during tracing, adding additional ops to the tf.Graph for every iteration of the loop.
     # 所以如果不用tf.range的话，计算图会非常大，trace的过程就会非常耗时，在epoch较大时几乎必然失败
     for i in tf.range(epochs):  # 特别注意：这里一定要用tf.range，否则编译会超级慢，且如果次数较大，还会编译失败
@@ -86,17 +85,14 @@ def train_model():
         # 这两种方式在计算图内都行不通
         # test_acc.append(test_correct/ 10000)  # 列表的append操作在计算图中不会执行
         # test_acc = tf.concat([test_acc, train_correct / 50000], 0)
-        # 下面两个可以执行，但是我自己生造的办法
-        # train_acc.assign(tf.tensor_scatter_nd_update(train_acc, [[i]], [train_correct / 50000]))
-        # test_acc.assign(tf.tensor_scatter_nd_update(test_acc, [[i]], [test_correct / 10000]))
-        train_acc = train_acc.write(i, train_correct / 50000)
-        test_acc = test_acc.write(i, test_correct / 10000)
+        train_acc.assign(tf.tensor_scatter_nd_update(train_acc, [[i]], [train_correct / 50000]))
+        test_acc.assign(tf.tensor_scatter_nd_update(test_acc, [[i]], [test_correct / 10000]))
         if i % 10 == 0:
             tf.print('before epoch', i + 1, 'loss:', l)
             tf.print(train_correct)
             tf.print(test_correct)
 
-    return train_acc.stack(), test_acc.stack()
+    # return train_acc
 
 
 time0 = time.time()
@@ -104,17 +100,17 @@ print(time0)
 # print(train_model.pretty_printed_concrete_signatures())
 
 # inspect the code autograph generates （查看自动计算图生成的代码）
-# print(tf.autograph.to_code(train_model.python_function))
+print(tf.autograph.to_code(train_model.python_function))
 
-train_acc, test_acc = train_model()  # 经测试发现，执行的时候才会编译
+train_model()  # 经测试发现，执行的时候才会编译
 print(train_model.pretty_printed_concrete_signatures())
 print(time.time() - time0)
 print('after  epoch', epochs, 'loss:', loss(net(X), y))  # 这里又计算了一遍loss
 
 print(train_acc)
 print(test_acc)
-plt.plot(range(1, epochs + 1), train_acc, label='训练集')
-plt.plot(range(1, epochs + 1), test_acc, label='测试集')
+plt.plot(range(1, epochs + 1), train_acc.numpy(), label='训练集')
+plt.plot(range(1, epochs + 1), test_acc.numpy(), label='测试集')
 plt.legend()  # 显示图例
 plt.grid()  # 显示网格
 plt.show()
