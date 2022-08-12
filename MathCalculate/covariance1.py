@@ -13,3 +13,4 @@ S = np.vstack((eng, mat, phy))
 print(S)
 print(np.cov(S))  # 协方差矩阵，S的每一行表示一类数据，从pandas中读取数据时，需要转置
 # print(np.cov(S.T))
+print(np.corrcoef(S))  # 相关系数矩阵
