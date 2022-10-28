@@ -1,4 +1,5 @@
 # 梯度场Gradient Field
+# 函数值z沿着梯度的方向增加最快，这样去理解
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,11 +28,15 @@ def numerical_gradient(f, P):
 
 x = np.arange(-2, 2, 0.25)
 y = np.arange(-2, 2, 0.25)
+# x, y的shape=16
 
 X, Y = np.meshgrid(x, y)
+# X, Y的shape=(16, 16)
 X = X.flatten()
 Y = Y.flatten()
+# X, Y的shape=256
 
+# np.array([X, Y])的shape=(2, 256)
 grad = numerical_gradient(f, np.array([X, Y]))
 
 plt.quiver(X, Y, grad[0], grad[1])  # grad[0]是一个1*X.size的数组
