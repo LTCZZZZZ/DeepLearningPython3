@@ -52,6 +52,43 @@ def coin2(c, n):
     return dp[n]
 
 
+def coin2_1(c, n):
+    """
+    优化版，并加上得到n的最优序列
+    """
+    # dp[i]表示相加得到i所需的最少硬币数
+    # l[i]表示相加得到i所需的最少硬币数的硬币列表
+    dp = [float('inf')] * (n + 1)
+    dp[0] = 0
+    l = [[]] * (n + 1)
+    # 先进行优化，确定dp[i]=1对应的值
+    for j in c:
+        if j <= n:
+            dp[j] = 1
+            l[j] = [j]
+
+    for i in range(1, n + 1):
+        if dp[i] == 1:
+            continue
+        for j in c:
+            # 这里i已经不可能等于j了
+            if i - j > 0:
+                temp = dp[i - j] + 1
+                if temp < dp[i]:
+                    # 小于时进行替换，否则不操作
+                    dp[i] = temp
+                    l[i] = l[i - j] + [j]
+
+    # 验证dp和l是否相符
+    for i in range(n + 1):
+        # print(i, l[i], dp[i])
+        if dp[i] < float('inf'):
+            assert dp[i] == len(l[i])
+            assert i == sum(l[i])
+
+    return dp[n], l[n]
+
+
 # 遍历法（我自己写的）：
 def coin3(c, n):
     """
@@ -95,23 +132,26 @@ if __name__ == '__main__':
     # 另外，注意下面括号的位置，timeit(coin2)是先将coin2变成了另一个函数（函数名变了）
     # print(timeit(coin1)(c, n))
     print(timeit(coin2)(c, n))
-    M = 0
-    print(timeit(coin3)(c, n))
-    print(M)
+    print(timeit(coin2_1)(c, n))
+    # M = 0
+    # print(timeit(coin3)(c, n))
+    # print(M)
 
     c = [1, 2, 5, 10]  # n=50，392次递归
     # c = [10, 5, 2, 1]  # n=50，3947次递归
     n = 50  # 10*5
     # print(coin1(c, n))  # 爆炸了，好久都运行不出结果
     print(timeit(coin2)(c, n))
+    print(timeit(coin2_1)(c, n))
     # 全局变量M，记录递归次数
-    M = 0
-    print(timeit(coin3)(c, n))
-    print(M)
+    # M = 0
+    # print(timeit(coin3)(c, n))
+    # print(M)
 
     c = [1, 2, 7, 8, 12, 50]
     n = 65  # 10*5
     print(timeit(coin2)(c, n))
-    M = 0
-    print(timeit(coin3)(c, n))
-    print(M)
+    print(timeit(coin2_1)(c, n))
+    # M = 0
+    # print(timeit(coin3)(c, n))
+    # print(M)
