@@ -6,6 +6,10 @@
 # 我感觉这已经是充分条件了
 
 import numpy as np
+from decimal import Decimal, getcontext  # 十进制高精度计算
+
+print(getcontext().prec)
+getcontext().prec = 50  # 设置精度
 
 
 def f(x):
@@ -17,6 +21,7 @@ def f_prime(x):
 
 
 def newton(f, f_prime, x0, tol=1e-6, max_iter=100):
+    # 可以看到，牛顿法的收敛速度很快，（生成的，正确性待考证：但是对于非线性方程，牛顿法的收敛速度很慢）
     x = x0
     for i in range(max_iter):
         x_new = x - f(x) / f_prime(x)
@@ -32,6 +37,7 @@ def newton(f, f_prime, x0, tol=1e-6, max_iter=100):
     return x
 
 
-newton(f, f_prime, 3)
-newton(f, f_prime, 1)
+# newton(f, f_prime, 3)
+newton(f, f_prime, Decimal(3))
+# newton(f, f_prime, 1)
 
