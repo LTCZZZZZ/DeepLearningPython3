@@ -288,7 +288,7 @@ def re_match(pattern: str, string: str, offset=0):
             if len(pattern) > len(string):
                 return None
             # 注意这里的offset，很巧妙
-            return d_match(pattern, string[1:], offset=offset+1)
+            return re_match(pattern, string[1:], offset=offset+1)
         else:
             # 此处只需要处理含一个*的情况，含多个*的情况会在递归中自动处理
             count = pattern.count('*')  # 注意到每个*结构至少占2个字符，但它最少的情况下可能匹配0个字符
@@ -296,26 +296,26 @@ def re_match(pattern: str, string: str, offset=0):
             upper = len(string) - len(pattern) + count * 2  # 此*结构至多可匹配的字符数上限
             if upper < 0:
                 upper = 0
-            print('upper: ', upper)
+            # print('upper: ', upper)
             # 因为是贪婪模式，所以't*asd'假如取'tasd'匹配到之后，在"同样的位置"还要尝试'ttasd'
             for i in range(0, upper + 1):
                 pat = pattern[:index] + pattern[index - 1] * i + pattern[index + 1:]
                 # 注意，这里显然不能直接return d_match(pat, string)
                 # 算法在这个位置仍然做了很多无用功，因为本来首字母匹配不到string就该往后跳的，但此处会尝试先替换完全部的*
-                res = d_match(pat, string)
+                res = re_match(pat, string)
                 if res:
                     for j in range(i + 1, upper + 1):
                         pat = pattern[:index - 1] + pattern[index - 1] * j + pattern[index + 1:]
-                        res2 = d_match(pat, string)
-                        print(j)
-                        print(pat, string)
-                        print(res2)
+                        res2 = re_match(pat, string)
+                        # print(j)
+                        # print(pat, string)
+                        # print(res2)
                         # 匹配到了但匹配的位置偏后，或者没匹配到
                         # （特别注意：由于算法的冗余操作，这里没匹配到，不代表j更大时也匹配不到，
                         # 只不过j更大时即使能匹配到，匹配到的位置也必定在res.start之后，所以不予考虑）
                         if res2 and res2.start > res.start or res2 is None:
                             return res
-                        print(res2)
+                        # print(res2)
                         # 在匹配到且res2.start = res.start时会自动进入下一个循环
                     # 如果循环完了还没return，此时return res2
                     return res2
@@ -368,12 +368,14 @@ print(re_match('f*k*h*e*', 'asdfffkkheeeokj'))
 print(re.search('f*k*h*e*', 'asdfffkkheeeokj'))
 print()
 
+print('_____________________________________')
 # 注意这个例子，很经典
-print(d_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同
-print(re_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同
+print('d_match:', d_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同
+print('re_match', re_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同
 print(re.search('fk*h*e*', 'asdfffkkheeeokj'))  # 有多个成功的匹配，re只取了第一个
 print()
 
+print('_____________________________________')
 print(d_match('fk*h*e*', 'asdfkkheeeokj'))
 print(re_match('fk*h*e*', 'asdfkkheeeokj'))
 print(re.search('fk*h*e*', 'asdfkkheeeokj'))
