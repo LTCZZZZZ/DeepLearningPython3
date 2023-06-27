@@ -230,7 +230,7 @@ class m_obj:
         return True
 
 
-print(m_obj(3, 4, 'ab'))
+# print(m_obj(3, 4, 'ab'))
 
 
 def exect_match(pattern, string):
@@ -248,6 +248,11 @@ def exect_match(pattern, string):
 
 def d_match(pattern: str, string: str, offset=0):
     # 这个算法中间做了颇多无用功，主要集中在"先取最多个数的字符去匹配"那里，这在string特别长的时候会造成很大的开销
+    # 且，关键问题在于，如果从长往短匹配，那么长的可能会优先匹配到某个后位置的，比如start=5，于是结束程序，
+    # 但更短的可能会在更前的位置匹配到，比如start=3，于是这个逻辑就有问题了；
+    # 从短往长匹配也会有这个问题，就是在某个后的位置先匹配到，所以这个整体逻辑顺序要改
+    # 思路是：在string当前位置穷尽所有匹配之前，string禁止向后移位
+
     # 更优的算法参见KMP算法及后续...
     # print(pattern, string)
 
@@ -259,7 +264,7 @@ def d_match(pattern: str, string: str, offset=0):
             if len(pattern) > len(string):
                 return None
             # 注意这里的offset，很巧妙
-            return d_match(pattern, string[1:], offset=offset+1)
+            return d_match(pattern, string[1:], offset=offset + 1)
         else:
             # 此处只需要处理含一个*的情况，含多个*的情况会在递归中自动处理
             count = pattern.count('*')  # 注意到每个*结构至少占2个字符，但它最少的情况下可能匹配0个字符
@@ -276,6 +281,55 @@ def d_match(pattern: str, string: str, offset=0):
                     return res
 
 
+N = 0
+
+
+def d_match1(pattern: str, string: str, offset=0):
+    # 此函数体中对string完全不移位（即必从string第一位开始匹配）
+    # print(pattern, string)
+    # global N
+    # N += 1
+
+    if exect_match(pattern, string):
+        return m_obj(offset, offset + len(pattern), string[:len(pattern)])
+    else:
+        if '*' not in pattern:
+            # 因为在主函数中验证过exect_match，所以这里直接返回None
+            return None
+        else:
+            # 此处只需要处理含一个*的情况，含多个*的情况会在递归中自动处理
+            count = pattern.count('*')  # 注意到每个*结构至少占2个字符，但它最少的情况下可能匹配0个字符
+            index = pattern.index('*')  # 第一个*的索引
+            upper = len(string) - len(pattern) + count * 2  # 此*结构至多可匹配的字符数上限
+            if upper < 0:
+                upper = 0
+            # 自然数倒序，取到0。思路是先取最多个数的字符去匹配，比如't*asd'可能取'tttttasd'去匹配，然后依次减少t的个数
+            for i in range(upper, -1, -1):
+                pat = pattern[:index - 1] + pattern[index - 1] * i + pattern[index + 1:]
+                # 注意，这里显然不能直接return d_match(pat, string)
+                res = d_match1(pat, string, offset)
+                if res:
+                    return res
+
+
+def d_match2(pattern: str, string: str, offset=0):
+    # 改进版，此函数看着感觉没问题了，通过了下方所有的用例测试，
+    # 就是匹配时有大量无用的计算，即贪婪时哪怕没匹配到一个字符，也会从最贪婪开始匹配，导致递归次数非常多
+    # 此外，如果string本身很长，由于算法内采用了upper变量，由代码逻辑可知此函数将占用大量的时间和空间复杂度，应该是效率极低的算法
+    # print(pattern, string, offset)
+
+    res = d_match1(pattern, string, offset)
+    if res:
+        return res
+    else:
+        # 确保待匹配的串长度要大于0
+        if len(string[1:]) > 0:
+            # 注意这里是d_match2而不是d_match1，如果是d_match1，那么递归只会进行到string[1:]就停住了
+            return d_match2(pattern, string[1:], offset=offset + 1)
+        else:
+            return None
+
+
 def re_match(pattern: str, string: str, offset=0):
     # d_match优化为尽量和re.search效果相同的版本
     # print(pattern, string)
@@ -288,7 +342,7 @@ def re_match(pattern: str, string: str, offset=0):
             if len(pattern) > len(string):
                 return None
             # 注意这里的offset，很巧妙
-            return re_match(pattern, string[1:], offset=offset+1)
+            return re_match(pattern, string[1:], offset=offset + 1)
         else:
             # 此处只需要处理含一个*的情况，含多个*的情况会在递归中自动处理
             count = pattern.count('*')  # 注意到每个*结构至少占2个字符，但它最少的情况下可能匹配0个字符
@@ -299,7 +353,7 @@ def re_match(pattern: str, string: str, offset=0):
             # print('upper: ', upper)
             # 因为是贪婪模式，所以't*asd'假如取'tasd'匹配到之后，在"同样的位置"还要尝试'ttasd'
             for i in range(0, upper + 1):
-                pat = pattern[:index] + pattern[index - 1] * i + pattern[index + 1:]
+                pat = pattern[:index - 1] + pattern[index - 1] * i + pattern[index + 1:]
                 # 注意，这里显然不能直接return d_match(pat, string)
                 # 算法在这个位置仍然做了很多无用功，因为本来首字母匹配不到string就该往后跳的，但此处会尝试先替换完全部的*
                 res = re_match(pat, string)
@@ -322,62 +376,77 @@ def re_match(pattern: str, string: str, offset=0):
 
 
 # 测试组
-print(re_match('st*asd', 'sttasdkjlstasd'))  # 如果拿替换*后的去匹配整个字符串，则这类匹配很容易出问题(无论替换次数是从多到少还是从少到多)
-# 这说明exect_match模式就不可取，除非是要找到所有匹配的子串，可以用此模式
+print('re_match:', re_match('st*asd', 'sttasdkjlstasd'))  # 如果拿替换*后的去匹配整个字符串，则这类匹配很容易出问题(无论替换次数是从多到少还是从少到多)
+print('d_match2:', d_match2('st*asd', 'sttasdkjlstasd'))
+print(re.search('st*asd', 'sttasdkjlstasd'))
 
 # 注意：下面的注释"匹配不到"和"匹配错误"是两码事，匹配不到表示正常就匹配不到，匹配错误表示程序本身有问题
 
 # print(single_match('.jd.a', 'skfljdtalkfj'))
 # print(match('.jd.a', 'skfljdtalkfj'))
-print(d_match('.jd.a', 'skfljdtalkfj'))
+print('d_match2:', d_match2('.jd.a', 'skfljdtalkfj'))
+print(re.search('.jd.a', 'skfljdtalkfj'))
 # print(single_match('.jdkf', 'skfljdtalkfj'))
 # print(match('.jdkf', 'skfljdtalkfj'))
-print(d_match('.jdkf', 'skfljdtalkfj'))  # 匹配不到
+print('d_match2: ', d_match2('.jdkf', 'skfljdtalkfj'))
+print(re.search('.jdkf', 'skfljdtalkfj'))
 # print(single_match('.jd.*a', 'skfljdtalkfj'))
+print('_____________________________________')
 
 
-print(match('.jdt*a', 'skfljdtttalkfj'))
-print(d_match('.jdt*a', 'skfljdtttalkfj'))
-print(re_match('.jdt*a', 'skfljdtttalkfj'))
+# print(match('.jdt*a', 'skfljdtttalkfj'))
+# print(d_match('.jdt*a', 'skfljdtttalkfj'))
+# print(re_match('.jdt*a', 'skfljdtttalkfj'))
+print('d_match2:', d_match2('.jdt*a', 'skfljdtttalkfj'))
 print(re.search('.jdt*a', 'skfljdtttalkfj'))
 
 # print(match('.jdt*ta', 'skfljdtttalkfj'))  # 匹配错误，好像会进入无限循环
-print(d_match('.jdt*ta', 'skfljdtttalkfj'))  # 匹配成功
-print(re_match('.jdt*ta', 'skfljdtttalkfj'))  # 匹配成功
+# print(d_match('.jdt*ta', 'skfljdtttalkfj'))  # 匹配成功
+# print(re_match('.jdt*ta', 'skfljdtttalkfj'))  # 匹配成功
+print('d_match2:', d_match2('.jdt*ta', 'skfljdtttalkfj'))
 print(re.search('.jdt*ta', 'skfljdtttalkfj'))
+print('_____________________________________')
 
 # print(match('.jd.*a', 'skfljdtalkfj'))  # 匹配错误
-print(d_match('.jd.*a', 'skfljdtalkfj'))  # 匹配成功
-print(re_match('.jd.*a', 'skfljdtalkfj'))  # 匹配成功
+# print(d_match('.jd.*a', 'skfljdtalkfj'))  # 匹配成功
+# print(re_match('.jd.*a', 'skfljdtalkfj'))  # 匹配成功
+print('d_match2:', d_match2('.jd.*a', 'skfljdtalkfj'))
 print(re.search('.jd.*a', 'skfljdtalkfj'))
 
-print(match('.jd.*', 'skfljdtalkfj'))
-print(d_match('.jd.*', 'skfljdtalkfj'))
-print(re_match('.jd.*', 'skfljdtalkfj'))
+# print(match('.jd.*', 'skfljdtalkfj'))
+# print(d_match('.jd.*', 'skfljdtalkfj'))
+# print(re_match('.jd.*', 'skfljdtalkfj'))
+print('d_match2:', d_match2('.jd.*', 'skfljdtalkfj'))
 print(re.search('.jd.*', 'skfljdtalkfj'))
 
 print('_____________________________________')
 # 匹配成功
-print(d_match('.f*k*h*e*', 'asdfffkkgheeeokj'))
-print(re_match('.f*k*h*e*', 'asdfffkkgheeeokj'))
+# print(d_match('.f*k*h*e*', 'asdfffkkgheeeokj'))
+# print(re_match('.f*k*h*e*', 'asdfffkkgheeeokj'))
+print('d_match2:', d_match2('.f*k*h*e*', 'asdfffkkgheeeokj'))
 print(re.search('.f*k*h*e*', 'asdfffkkgheeeokj'))
 print()
 
-print(d_match('f*k*h*e*', 'asdfffkkheeeokj'))
-print(re_match('f*k*h*e*', 'asdfffkkheeeokj'))
+# print(d_match('f*k*h*e*', 'asdfffkkheeeokj'))
+# print(re_match('f*k*h*e*', 'asdfffkkheeeokj'))
+print('d_match2:', d_match2('f*k*h*e*', 'asdfffkkheeeokj'))
 print(re.search('f*k*h*e*', 'asdfffkkheeeokj'))
 print()
 
 print('_____________________________________')
 # 注意这个例子，很经典
-print('d_match:', d_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同
-print('re_match', re_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同
-print(re.search('fk*h*e*', 'asdfffkkheeeokj'))  # 有多个成功的匹配，re只取了第一个
+# print('d_match:', d_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，但和re匹配的结果不同，fkkheee
+print('d_match2:', d_match2('fk*h*e*', 'asdfffkkheeeokj'))
+# print('N:', N)  # 上面那个递归了2511次，有大量无用的计算
+# print('re_match', re_match('fk*h*e*', 'asdfffkkheeeokj'))  # 匹配成功，且结果相同
+print(re.search('fk*h*e*', 'asdfffkkheeeokj'))  # 有多个成功的匹配，re只取了第一个，f
+print(re.findall('fk*h*e*', 'asdfffkkheeeokj'))  # 有多个成功的匹配，findall取不重叠的，['f', 'f', 'fkkheee']
 print()
 
 print('_____________________________________')
-print(d_match('fk*h*e*', 'asdfkkheeeokj'))
-print(re_match('fk*h*e*', 'asdfkkheeeokj'))
+# print(d_match('fk*h*e*', 'asdfkkheeeokj'))
+print(d_match2('fk*h*e*', 'asdfkkheeeokj'))
+# print(re_match('fk*h*e*', 'asdfkkheeeokj'))  # 匹配成功，但和re匹配的结果不同，f
 print(re.search('fk*h*e*', 'asdfkkheeeokj'))
 
 # 基本已经完善，但还差在含(.*)结构或特殊情况时从后往前检索的问题，见程序运行的结果
