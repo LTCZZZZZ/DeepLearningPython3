@@ -120,6 +120,57 @@ class Solution2:
         return max(product_list)
 
 
+class Solution3:
+    """
+    动态规划版
+    """
+
+    def maxProduct(self, nums: list[int]) -> int:
+        # s_max[i]为以nums[i]结尾的连乘积最大值
+        # s_min[i]为以nums[i]结尾的连乘积最小值
+        s_max = []
+        s_min = []
+        for i, num in enumerate(nums):
+            if i == 0:
+                s_max.append(num)
+                s_min.append(num)
+            else:
+                # 简单得想：s_max和s_min的值好像只能从这3个值中产生
+                p1 = s_max[i - 1] * num
+                p2 = s_min[i - 1] * num
+                s_max.append(max(p1, p2, num))
+                s_min.append(min(p1, p2, num))
+        return max(s_max)
+
+
+class SolutionDemo:
+    """
+    这个算法我看了半天没看懂，
+    然后我看懂了，算法的原理是基于：
+    首先，以0分成若干段，每段的乘积最大值只可能是：必然包含从最左边开始或最右边开始的段，证明如下：
+    反证法，对任意不含0的段，若存在某不含端的中间段乘积最大（不考虑元素=1的情况），则此段左1必为负数，否则可将左1加入段，
+    同理可知右1必为负数，然而，此时将左1和右1都加入段，段的乘积更大，与假设矛盾，故不存在不含端的中间段乘积最大的情况。
+
+    此算法是从左右两端分别开始，每次计算一步，然后存储最大值，遇到前一段乘积为0时，抛弃前一段，从当前元素开始计算。
+
+    启发性思考："总体"有点守恒的感觉，你思考得越多，算法内包含的默认规则越多，机器就可以更少得运算；
+    反之，你思考得越少，算法内蕴含的规则越少，机器要运算得就越多。
+    感觉就像，机器通过额外的运算来cover了你没有包含在算法内的规则。
+
+    发散思考：能否构建一个相关的数据结构，来具象化地表示这些，
+    比如解决一个问题，总量是100，解法A算法规则占模80，计算机计算占模20，而另一个解法B算法占模60，计算占模40，这样
+    """
+    def maxProduct(self, nums: list[int]) -> int:
+        r_nums = nums[::-1]
+        res = nums[0]
+        a, b = 1, 1
+        for i in range(len(nums)):
+            a = a * nums[i] if a else nums[i]
+            b = b * r_nums[i] if b else r_nums[i]
+            res = max(res, a, b)
+        return res
+
+
 if __name__ == '__main__':
     s1 = Solution1()
     # print(s1.maxProduct([-2, 3, -4]))
@@ -131,7 +182,15 @@ if __name__ == '__main__':
     # 若m为偶数，则p=m，取整个段；
     # 若m为奇数，则p<m且p为偶数，显然，由数组的链式结构可知，若p<m-1，则必可找到p'>p，使p'包含p的全部元素，
     # 于是，p必须等于m-1，这时只需比较段的两端（从端向内，到第一个负数为止），取乘积绝对值大者即可，
-    # 此算法的复杂度较之常规的动态规划要低不少
+    # 此算法的复杂度较之常规的动态规划感觉要低不少，但写出Solution3后发现这是我的错觉。。。
     s2 = Solution2()
     print(s2.maxProduct([2, -5, -2, -4, 3]))
     print(s2.maxProduct([-2, 0, -1]))
+
+    s3 = Solution3()
+    print(s3.maxProduct([2, -5, -2, -4, 3]))
+    print(s3.maxProduct([-2, 0, -1]))
+
+    d = SolutionDemo()
+    print(d.maxProduct([2, -5, -2, -4, 3]))
+    print(d.maxProduct([-2, 0, -1]))
