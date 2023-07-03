@@ -122,7 +122,7 @@ class Solution2:
 
 class Solution3:
     """
-    动态规划版
+    动态规划版，想了想，此算法貌似也适用于数组元素含绝对值小于1的浮点数的情况
     """
 
     def maxProduct(self, nums: list[int]) -> int:
