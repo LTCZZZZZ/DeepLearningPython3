@@ -453,3 +453,10 @@ print(re.search('fk*h*e*', 'asdfkkheeeokj'))
 # 但即使完善了，这种控制流的方式既看起来复杂又容易出错，中间还有部分重复计算的地方。
 # 注意，需要考虑诸如 (.*h*)这种结构，感觉有点复杂
 # 用动态编程的思想再搞一遍
+
+# 改进版d_match2感觉已经没问题了，但算法本身很蠢
+print('_____________________________________')
+time1 = time.time()
+print(d_match2("bc*c*.b*b*.*a*a*.*", "acabacbaaabacba"))
+print('time:', time.time() - time1)
+print(re.search("bc*c*.b*b*.*a*a*.*", "acabacbaaabacba"))
