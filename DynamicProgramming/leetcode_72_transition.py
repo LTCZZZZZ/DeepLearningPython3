@@ -11,119 +11,91 @@
 
 # 来源：https://www.zhihu.com/question/39948290/answer/1922158996
 
-# 初步思路是，让word1包含word2，最后执行删除操作。
-# 于是，先找出word1中的word2最大子列，然后对word1扩充(插入，替换)，使之包含word2，最后删除多余的字符。
-# 最大子列好像不靠谱啊，比如在上述例子中，rs也是最大子列，但按rs来操作的话，次数就增加了，如果再对相同长度的子列分情况讨论优先级，就太复杂了。
-# 改为下面的方式，有个主次之分，以目标字符串word2为主
-
+import time
 import numpy as np
+from functools import lru_cache
+
+count = 0
 
 
-def assist(word1, word2):
+@lru_cache()
+def assist(w1: str, w2: str):
     """
-    从word2中第一个字符开始遍历，每个字符生成一个结果，规则如下：
-    设字符为c，如果c不在word1中，生成空字符串或忽略此结果，若在word1中，则从c往后，依次判断word2的剩余字符是否"依序"在word1中，并拿到这个序列
+    这个算法从头到尾是我自己想出来的，不容易，，，
     """
-    res = []
-    for i, c in enumerate(word2):
-        # 每次循环开始时重置初始值（j是word1相关的参数，相当于每次循环都会检视整个word1）
-        common = []
-        j = 0
-        # 注意这两个循环的主体都是word2相关
-        is_start = 1
-        start_j = -1
-        end_j = -1
-        end_k = -1
-        # print('______________')
-        # print(i, c)
-        for k, p in enumerate(word2[i:]):
-            # print(j, word1[j:], k, p)
-            if p in word1[j:]:
-                current_index = word1[j:].index(p)
+    global count
+    count += 1
 
-                # 记录word1中最初匹配到的位置
-                if is_start == 1:
-                    start_j = current_index + j
-                is_start = 0
-
-                # 分别记录最后匹配到的位置，注意这里要加j，而下面end_k同样要加i
-                end_j = current_index + j
-                # print(p, end_j)
-                end_k = k + i
-
-                common.append(p)
-                # 重新设置j的值，注意这里要加1，因为索引位的值已经被用掉了
-                j = current_index + j + 1
-            else:
-                # 遇到全没搜索到的，可以两者同时向后跳过一个字符（此字符就可用替换操作轻松代替）
-                # 但如果是第一个字符c就没搜索到，此时break跳出内层循环直接进入外层的下一个循环
-                if is_start:
-                    break
-                j += 1
-                continue
-        if common:
-            common = ''.join(common)
-            # 后4个元素分别是：word1匹配的起始和结束位置，word2匹配的起始和结束位置
-            res.append((common, start_j, end_j, i, end_k))
-
-    return res
-
-
-def contains(w1, w2):
-    """
-    w1是否按序包含w2，如abcde包含ace
-    """
-
-    # w2放在前面，可兼容w1和w2同时耗尽的情况
-    if w2 == '':
-        return True
     if w1 == '':
-        return False
+        return len(w2)
+    if w2 == '':
+        return len(w1)
 
     if w1[0] == w2[0]:
-        return contains(w1[1:], w2[1:])
-    else:
-        return contains(w1[1:], w2)
+        return assist(w1[1:], w2[1:])
 
+    # 优化的代码，非必要，但可大幅减少计算量
+    if len(w1) == len(w2) == 1:
+        # 此时都为单字符且不相等
+        return 1
 
-def assist2(common, word1):
-    """
-    从word1中找出最紧凑的common
-    """
-    index_list = []
-    for i, c in enumerate(word1):
-        if common[0] == c:
-            index_list.append(i)
+    # 以下分别对应3种操作
+    r1 = assist(w1[1:], w2) + 1  # 删除
+    r2 = assist(w1, w2[1:]) + 1  # 插入
+    r3 = assist(w1[1:], w2[1:]) + 1  # 替换
+    # print(w1, w2, r1, r2, r3)
+    # time.sleep(0.5)
 
-    res = []
-    for ix in index_list:
-        if contains(word1[ix:], common):
-            res.append(ix)
-    return max(res)
-
-
-def md(word1: str, word2: str) -> int:
-    common_list = assist(word1, word2)
-    print(common_list)
-    lengths = [len(v[0]) for v in common_list]
-    if len(lengths) == 0:
-        res = max(len(word1), len(word2))
-    else:
-        index = np.argmax(lengths)
-        # index = lengths.index(max(lengths))
-        item = common_list[index]
-        item = list(item)
-        item[1] = assist2(item[0], word1)
-        print(item)
-        res = max(item[1], item[3]) + ((item[2] - item[1] + 1) - (len(item[0]))) + \
-              max((len(word1) - 1 - item[2]), (len(word2) - 1 - item[4]))
-        res = min(res, max(len(word1), len(word2)))
-    return res
+    return min(r1, r2, r3)
 
 
 class Solution:
     def minDistance(self, word1: str, word2: str) -> int:
-        return min(md(word1, word2), md(word2, word1))
+        return assist(word1, word2)
+
+
+# dp版，同时输出变更过程
+def md(w1, w2):
+    """
+    dp[i, j]表示w1[:i]和w2[:j]的编辑距离，显然dp[0, 0] = 0，dp[0, j] = j，dp[i, 0] = i
+    """
+    # 设置初始值
+    dp = np.zeros((len(w1) + 1, len(w2) + 1), dtype=int)
+    dp[0] = range(len(w2) + 1)
+    dp[:, 0] = range(len(w1) + 1)
+    # print(dp)
+
+    # 注意下面这个起始值，必须从1开始，否则，可产生不易察觉的bug，因为dp[-1,-1]是存在的合理取值
+    for i in range(1, len(w1) + 1):
+        for j in range(1, len(w2) + 1):
+            if w1[i - 1] == w2[j - 1]:
+                dp[i, j] = dp[i - 1, j - 1]
+            else:
+                dp[i, j] = min(dp[i - 1, j], dp[i, j - 1], dp[i - 1, j - 1]) + 1
+
+    # 打印变更过程
+    # print(dp)
+    # 要从后往前走，最后再从前向后打印，所以下面的string都是加在后面，而不是前面
+    # i, j = len(w1), len(w2)
+    string = ''
+    while i > 0 or j > 0:
+        if i > 0 and dp[i, j] == dp[i - 1, j] + 1:
+            string = f'delete  w1[{i - 1}] {w1[i - 1]}\n' + string
+            i -= 1
+        elif j > 0 and dp[i, j] == dp[i, j - 1] + 1:
+            string = f'insert  w2[{j - 1}] {w2[j - 1]}\n' + string
+            j -= 1
+        elif i > 0 and j > 0 and dp[i, j] == dp[i - 1, j - 1] + 1:
+            string = f'replace w1[{i - 1}] {w1[i - 1]} with w2[{j - 1}] {w2[j - 1]}\n' + string
+            i -= 1
+            j -= 1
+        else:
+            # dp[i, j] == dp[i - 1, j - 1] 的情况
+            i -= 1
+            j -= 1
+    print(string)
+
+    return dp[-1, -1]
 
 
 if __name__ == '__main__':
@@ -140,7 +112,20 @@ if __name__ == '__main__':
     # res = s.minDistance('prosperity', 'properties')
     # res = s.minDistance('ity', 'ties')
 
-    # 下面这个用例就直接挂掉了，没办法
-    res = s.minDistance('abcdxabcde', 'abcdeabcdx')
+    # 这个没问题了，但下面更长的又会超时
+    # res = s.minDistance('abcdxabcde', 'abcdeabcdx')
+    # res = s.minDistance('aabcdxabcde', 'abcdeabcdx')
 
+    # 超时，需要加上lru_cache
+    res = s.minDistance('dinitrophenylhydrazine', 'acetylphenylhydrazine')
+
+    print(f'递归次数：{count}')
     print(res)
+
+    # print(md('din', 'ac'))
+    print(md('intention', 'execution'))
+    print(md('plasma', 'altruism'))
+    print(md('prosperity', 'properties'))
+    print(md('abcdxabcde', 'abcdeabcdx'))
+    print(md('aabcdxabcde', 'abcdeabcdx'))
+    print(md('dinitrophenylhydrazine', 'acetylphenylhydrazine'))
