@@ -74,7 +74,7 @@ def md(w1, w2):
                 dp[i, j] = min(dp[i - 1, j], dp[i, j - 1], dp[i - 1, j - 1]) + 1
 
     # 打印变更过程
-    # print(dp)
+    print(dp)
     # 要从后往前走，最后再从前向后打印，所以下面的string都是加在后面，而不是前面
     # i, j = len(w1), len(w2)
     string = ''
@@ -129,3 +129,5 @@ if __name__ == '__main__':
     print(md('abcdxabcde', 'abcdeabcdx'))
     print(md('aabcdxabcde', 'abcdeabcdx'))
     print(md('dinitrophenylhydrazine', 'acetylphenylhydrazine'))
+
+    print(md('ation', 'tiona'))  # 这种大段相同的情况，在递归矩阵中表现为一段长斜线的相同值
