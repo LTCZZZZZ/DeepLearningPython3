@@ -11,6 +11,8 @@
 # 于是高度的总变化即构成了切平面的方程
 # f的全微分为dz=▽f·(dx,dy)+o(ρ)，忽略掉后面的o(ρ)的话，前面的部分就是切平面的方程，即在切点附近可用▽f·(dx,dy)近似代替f(x,y)的变化量
 
+# 此外，如果想要提高精度，可以使用更高阶的泰勒多项式
+
 from matplotlib import pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
