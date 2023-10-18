@@ -15,10 +15,16 @@ def func(x1, x2):
     return 2 * x1 ** 2 + x2 ** 2 - x1 * x2 - 2 * x2
 
 
+def zero(x1, x2):
+    return 0 * x1
+
+
 x1 = np.arange(-1.5, 1.5, 0.01)
 x2 = np.arange(-1.5, 1.5, 0.01)
 x1, x2 = np.meshgrid(x1, x2)
 ax.plot_surface(x1, x2, func(x1, x2), color='y', alpha=0.3)
+# 补一个零平面辅助观察图像
+ax.plot_surface(x1, x2, zero(x1, x2), color='k', alpha=0.3)
 
 x1 = symbols("x1")
 x2 = symbols("x2")
